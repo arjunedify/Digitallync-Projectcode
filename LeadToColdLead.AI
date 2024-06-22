@@ -1,0 +1,7 @@
+trigger LeadToColdLead on Lead (after update) {
+    for (Lead lead : Trigger.new) {
+        if (lead.Status == 'Cold Lead' && lead.RecordType.Name != 'Cold Lead') {
+            lead.RecordTypeId = [SELECT Id FROM RecordType WHERE SObjectType = 'Lead' AND DeveloperName = 'Cold_Lead'].Id;
+        }
+    }
+}
