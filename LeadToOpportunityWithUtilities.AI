@@ -1,0 +1,39 @@
+trigger LeadToOpportunityWithUtilities on Lead (before update) {
+    List<Opportunity> opportunitiesToCreate = new List<Opportunity>();
+    List<Task> tasksToTransfer = new List<Task>();
+    List<ContentDocumentLink> filesToTransfer = new List<ContentDocumentLink>();
+    
+    for (Lead lead : Trigger.new) {
+        if (lead.isConverted == false && /* your conversion criteria */) {
+            Opportunity newOpportunity = new Opportunity(
+                Name = lead.FirstName + ' ' + lead.LastName,
+                CloseDate = System.today() + 30,
+                StageName = 'Prospecting',
+                LeadSource = lead.LeadSource,
+                // add other mappings here
+            );
+            opportunitiesToCreate.add(newOpportunity);
+            
+            // Transfer related tasks
+            for (Task t : [SELECT Id, WhatId FROM Task WHERE WhatId = :lead.Id]) {
+                t.WhatId = newOpportunity.Id;
+                tasksToTransfer.add(t);
+            }
+            
+            // Transfer related files
+            for (ContentDocumentLink cdl : [SELECT Id, LinkedEntityId FROM ContentDocumentLink WHERE LinkedEntityId = :lead.Id]) {
+                cdl.LinkedEntityId = newOpportunity.Id;
+                filesToTransfer.add(cdl);
+            }
+            
+            lead.IsConverted = true;
+            lead.ConvertedOpportunityId = newOpportunity.Id;
+        }
+    }
+    
+    if (!opportunitiesToCreate.isEmpty()) {
+        insert opportunitiesToCreate;
+        insert tasksToTransfer;
+        insert filesToTransfer;
+    }
+}
