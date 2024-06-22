@@ -1,0 +1,12 @@
+trigger OpportunityToLearner on Opportunity (after update) {
+    for (Opportunity opp : Trigger.new) {
+        if (opp.StageName == 'Closed Won' && opp.isClosed == true) {
+            // Assume Learner__c is a custom object for learners
+            Learner__c newLearner = new Learner__c(
+                Name = opp.Name,
+                // map other Opportunity fields to Learner
+            );
+            insert newLearner;
+        }
+    }
+}
