@@ -1,0 +1,20 @@
+trigger NotifyOwnerOnLeadAssignment on Lead (after insert) {
+    List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+    
+    for (Lead lead : Trigger.new) {
+        if (lead.OwnerId != null) {
+            User leadOwner = [SELECT Email FROM User WHERE Id = :lead.OwnerId LIMIT 1];
+            
+            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+            email.setToAddresses(new List<String>{leadOwner.Email});
+            email.setSubject('New Lead Assigned: ' + lead.LastName + ', ' + lead.FirstName);
+            email.setPlainTextBody('A new lead has been assigned to you. Please follow up promptly.');
+            
+            emails.add(email);
+        }
+    }
+    
+    if (!emails.isEmpty()) {
+        Messaging.sendEmail(emails);
+    }
+}
