@@ -1,0 +1,7 @@
+trigger OpportunityToColdLead on Opportunity (after update) {
+    for (Opportunity opp : Trigger.new) {
+        if ((opp.StageName == 'Cold Lead' || opp.StageName == 'Dead Lead') && opp.RecordType.Name != 'Cold Leads') {
+            opp.RecordTypeId = [SELECT Id FROM RecordType WHERE SObjectType = 'Opportunity' AND DeveloperName = 'Cold_Leads'].Id;
+        }
+    }
+}
