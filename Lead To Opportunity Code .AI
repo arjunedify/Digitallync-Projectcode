@@ -1,0 +1,22 @@
+trigger LeadToOpportunity on Lead (after update) {
+    List<Opportunity> opportunitiesToCreate = new List<Opportunity>();
+    
+    for (Lead lead : Trigger.new) {
+        if (lead.Company == 'Digital Lync' && lead.isConverted == false && /* your criteria here */) {
+            Opportunity newOpportunity = new Opportunity(
+                Name = lead.FirstName + ' ' + lead.LastName,
+                CloseDate = System.today() + 30,
+                StageName = 'Prospecting',
+                LeadSource = lead.LeadSource
+                // add other mappings here
+            );
+            opportunitiesToCreate.add(newOpportunity);
+            lead.IsConverted = true;
+            lead.ConvertedOpportunityId = newOpportunity.Id;
+        }
+    }
+    
+    if (!opportunitiesToCreate.isEmpty()) {
+        insert opportunitiesToCreate;
+    }
+}
